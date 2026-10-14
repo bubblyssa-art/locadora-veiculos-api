@@ -1,0 +1,255 @@
+{
+  "info": {
+    "name": "Locadora de Veículos - API REST",
+    "description": "Coleção para testar a API REST da locadora. Execute as requisições na ordem apresentada. A coleção cria um carro de teste com placa gerada automaticamente, lista e consulta o registro, atualiza-o, exclui-o e confirma que ele deixou de existir.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Verificar API (GET /)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('A API responde com HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('A resposta confirma que a API está funcionando', function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.mensagem).to.eql('API da Locadora de Veículos funcionando.');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Cadastrar carro de teste (POST /carro)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const sufixo = Math.random().toString(36).substring(2, 7).toUpperCase();",
+              "pm.collectionVariables.set('placaTeste', 'PT' + sufixo);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('O carro foi criado com HTTP 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "pm.test('A resposta contém os dados do carro criado', function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.id).to.exist;",
+              "  pm.expect(body.placa).to.eql(pm.collectionVariables.get('placaTeste'));",
+              "  pm.expect(body.modelo).to.eql('Carro de Teste Postman');",
+              "  pm.expect(Number(body.diaria)).to.eql(150);",
+              "  pm.collectionVariables.set('carroId', String(body.id));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"placa\": \"{{placaTeste}}\",\n  \"modelo\": \"Carro de Teste Postman\",\n  \"diaria\": 150.00\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/carro"
+      }
+    },
+    {
+      "name": "02 - Listar carros (GET /carro)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/carro"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('A listagem responde com HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('A resposta é uma lista que contém o carro de teste', function () {",
+              "  const carros = pm.response.json();",
+              "  const placaTeste = pm.collectionVariables.get('placaTeste');",
+              "  pm.expect(carros).to.be.an('array');",
+              "  pm.expect(carros.some(function (carro) { return carro.placa === placaTeste; })).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Consultar carro por ID (GET /carro/:id)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/carro/{{carroId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('A consulta por ID responde com HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('O ID retornado é o carro criado pela coleção', function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(String(body.id)).to.eql(pm.collectionVariables.get('carroId'));",
+              "  pm.expect(body.placa).to.eql(pm.collectionVariables.get('placaTeste'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Atualizar carro (PUT /carro/:id)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"placa\": \"{{placaTeste}}\",\n  \"modelo\": \"Carro de Teste Atualizado\",\n  \"diaria\": 175.50\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/carro/{{carroId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('A atualização responde com HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('O modelo e a diária foram atualizados', function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(String(body.id)).to.eql(pm.collectionVariables.get('carroId'));",
+              "  pm.expect(body.modelo).to.eql('Carro de Teste Atualizado');",
+              "  pm.expect(Number(body.diaria)).to.eql(175.5);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Excluir carro (DELETE /carro/:id)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/carro/{{carroId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('A exclusão responde com HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('A resposta confirma a exclusão do ID correto', function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.mensagem).to.eql('Carro excluído com sucesso.');",
+              "  pm.expect(String(body.id)).to.eql(pm.collectionVariables.get('carroId'));",
+              "  pm.collectionVariables.set('idExcluido', String(body.id));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Confirmar exclusão (GET /carro/:id deve retornar 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/carro/{{idExcluido}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('O ID excluído não existe mais (HTTP 404)', function () {",
+              "  pm.response.to.have.status(404);",
+              "});",
+              "pm.test('A API informa que o carro não foi encontrado', function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.erro).to.eql('Carro não encontrado.');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "placaTeste",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "carroId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idExcluido",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
